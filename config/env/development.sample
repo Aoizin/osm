@@ -1,0 +1,14 @@
+module.exports = {
+    db: {
+        url: 'mongodb://localhost/osm',
+        options: {
+            db: {native_parser: true},
+            server: {
+                poolSize: 5,
+                socketOptions: {keepAlive: 1},
+                auto_reconnect: true
+            }
+        }
+    },
+    enable_node_cluster: false
+};
