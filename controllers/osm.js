@@ -7,8 +7,8 @@ var rest = require('restler');
 var async = require('async');
 
 exports.reverse = function (req, res) {
-    var lat = Number(req.params.lat);
-    var lon = Number(req.params.lon);
+    var lat = Number(req.query.lat);
+    var lon = Number(req.query.lon);
     if (!lat || !lon) {
         res.status(409).send({message: 'Informar latitude e longitude'});
         return;

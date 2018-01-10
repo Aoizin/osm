@@ -87,7 +87,7 @@ if (config.enable_node_cluster && cluster.isMaster) {
     // Create our Express router
     var router = express.Router();
 
-    router.route('/osm/:lat/:lon')
+    router.route('/osm')
         .get(osm.reverse);
 
     router.route('/gerarPoligonos')
