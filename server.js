@@ -102,6 +102,7 @@ if (config.enable_node_cluster && cluster.isMaster) {
         relations.find(filter, {"tags": 1, "loc": 1})
             .then(function (result) {
                 cities = result;
+				console.log("cities: "+ result.length)
                 var filter = {
                     "tags.admin_level": '4',
                     'loc': {$exists: true}
@@ -112,6 +113,7 @@ if (config.enable_node_cluster && cluster.isMaster) {
             .then(
                 function (result) {
                     states = result;
+					console.log("states: "+ result.length)
                     var filter = {
                         "tags.admin_level": '2',
                         'loc': {$exists: true}
@@ -121,6 +123,7 @@ if (config.enable_node_cluster && cluster.isMaster) {
             )
             .then(function (result) {
                 countries = result;
+				console.log("countries: "+ result.length)
                 // Start the server
                 console.log("Server started!");
                 app.listen(3001);
