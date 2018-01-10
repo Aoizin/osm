@@ -2,7 +2,6 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
-var ejs = require('ejs');
 var session = require('express-session');
 var config = require('./config/config');
 var osm = require('./controllers/osm');
@@ -62,9 +61,6 @@ if (config.enable_node_cluster && cluster.isMaster) {
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
         next();
     });
-
-    // Set view engine to ejs
-    //app.set('view engine', 'ejs');
 
     // Use the body-parser package in our application
     app.use(bodyParser.json({type: function(req){
