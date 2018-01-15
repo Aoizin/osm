@@ -126,35 +126,13 @@ function recuperaRodovia(req, res, point, retorno, way) {
 
 
 function recuperaBairro(req, res, point, retorno) {
-    var jstsPoint = geojsonReader.read(point);
-    var filter = {
-        "tags.admin_level": "10",
-        "members.type": "node"
-    };
-    relations.find(filter, {"members.role.$": 1}, function (err, result) {
-        if (err) {
-            console.log(err);
-            res.status(500).send(err);
-        } else {
-            var refs = [];
-            result.forEach(function (r) {
-                refs.push(r.members[0].ref);
-            });
-            nodes.find({_id: {'$in': refs}}, function (err, result) {
-                if (err) {
-                    console.log(err);
-                    res.status(500).send(err);
-                } else {
-                    var way = sortJstsByPointDistance(result, jstsPoint);
-                    if (way[0].distance < 0.05) {
-                        retorno.address.suburb = result[way[0].index].tags.name;
-
-                    }
-                    recuperaCidade(req, res, point, retorno);
-                }
-            });
-        }
-    });
+	
+	var jstsPoint = geojsonReader.read(point);
+    var way = findIntesection(suburbs, jstsPoint);
+    if (way.index) {
+        retorno.address.suburb = suburbs[way.index].tags.name.pt ? suburbs[way.index].tags.name.pt : suburbs[way.index].tags.name;
+    }
+    recuperaCidade(req, res, point, retorno);
 }
 
 
@@ -199,7 +177,7 @@ function findIntesection(result, jstsPoint) {
 
 exports.gerarPoligonos = function (req, res) {
     var filter = {
-        "tags.admin_level": {'$in': ['2', '4', '8']},
+        "tags.admin_level": {'$in': ['2', '4', '8', '10']},
         'loc': {$exists: false},
         'noloc': {$exists: false}
     };
@@ -210,7 +188,7 @@ exports.gerarPoligonos = function (req, res) {
         } else {
             console.log(result.length);
             res.json({});
-            gerarPoligonos(res, result);
+            gerarPoligonos(result);
         }
     });
 }

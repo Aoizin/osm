@@ -8,6 +8,7 @@ var osm = require('./controllers/osm');
 // Include the cluster module
 var cluster = require('cluster');
 var q = require('q');
+suburbs = null;
 cities = null;
 states = null;
 countries = null;
@@ -96,40 +97,39 @@ if (config.enable_node_cluster && cluster.isMaster) {
         console.log("Carregando geometrias");
         var relations = require('./models/relations');
         var filter = {
-            "tags.admin_level": '8',
+            "tags.admin_level": {'$in': ['2', '4', '8', '10']},
             'loc': {$exists: true}
         };
         relations.find(filter, {"tags": 1, "loc": 1})
-            .then(function (result) {
-                cities = result;
-				console.log("cities: "+ result.length)
-                var filter = {
-                    "tags.admin_level": '4',
-                    'loc': {$exists: true}
-                };
-                return relations.find(filter, {"tags": 1, "loc": 1})
+            .exec(function (err, result) {
+				if(err){
+					return console.error(err);
+				}
 
-            })
-            .then(
-                function (result) {
-                    states = result;
-					console.log("states: "+ result.length)
-                    var filter = {
-                        "tags.admin_level": '2',
-                        'loc': {$exists: true}
-                    };
-                    return relations.find(filter, {"tags": 1, "loc": 1});
-                }
-            )
-            .then(function (result) {
-                countries = result;
-				console.log("countries: "+ result.length)
-                // Start the server
+				suburbs = result.filter(function(r){
+					return r.tags.admin_level == '10';
+				}
+				);
+                cities = result.filter(function(r){
+					return r.tags.admin_level == '8';
+				}
+				);
+				states = result.filter(function(r){
+					return r.tags.admin_level == '4';
+				}
+				);
+				countries = result.filter(function(r){
+					return r.tags.admin_level == '2';
+				}
+				);
+				console.log("suburbs: "+ suburbs.length);
+				console.log("cities: "+ cities.length);
+				console.log("states: "+ states.length);
+				console.log("countries: "+ countries.length);
+                 // Start the server
                 console.log("Server started!");
                 app.listen(3001);
-            })
-            .catch(function (err) {
-                console.error(err);
+
             });
     }).catch(function (err) {
         console.error(err.stack);
