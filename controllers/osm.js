@@ -73,9 +73,9 @@ exports.reverse = function (req, res) {
                     };
                     if (!retorno.address.road) {
                         var ret = way[1];
-                        recuperaRodovia(req, res, point, retorno, ret ? result[ret.index] : {});
+                        recuperaRodovia(req, res, jstsPoint, retorno, ret ? result[ret.index] : {});
                     } else {
-                        recuperaBairro(req, res, point, retorno);
+                        recuperaBairro(req, res, jstsPoint, retorno);
                     }
                 }
 
@@ -97,7 +97,7 @@ function sortJstsByPointDistance(result, jstsPoint) {
     return way;
 }
 
-function recuperaRodovia(req, res, point, retorno, way) {
+function recuperaRodovia(req, res, jstsPoint, retorno, way) {
     var filter = {
         "members.ref": retorno.osm_id
     };
@@ -116,46 +116,42 @@ function recuperaRodovia(req, res, point, retorno, way) {
                     state: "",
                     country: ""
                 };
-                recuperaBairro(req, res, point, retorno);
+                recuperaBairro(req, res, jstsPoint, retorno);
             } else {
-                recuperaCidade(req, res, point, retorno);
+                recuperaCidade(req, res, jstsPoint, retorno);
             }
         }
     });
 }
 
 
-function recuperaBairro(req, res, point, retorno) {
-	
-	var jstsPoint = geojsonReader.read(point);
+function recuperaBairro(req, res, jstsPoint, retorno) {
     var way = findIntesection(suburbs, jstsPoint);
     if (way.index) {
         retorno.address.suburb = suburbs[way.index].tags.name.pt ? suburbs[way.index].tags.name.pt : suburbs[way.index].tags.name;
     }
-    recuperaCidade(req, res, point, retorno);
+    recuperaCidade(req, res, jstsPoint, retorno);
 }
 
 
-function recuperaCidade(req, res, point, retorno) {
-    var jstsPoint = geojsonReader.read(point);
+function recuperaCidade(req, res, jstsPoint, retorno) {
     var way = findIntesection(cities, jstsPoint);
     if (way.index) {
         retorno.address.city = cities[way.index].tags.name.pt ? cities[way.index].tags.name.pt : cities[way.index].tags.name;
     }
-    recuperaEstado(req, res, point, retorno);
+    recuperaEstado(req, res, jstsPoint, retorno);
 }
 
-function recuperaEstado(req, res, point, retorno) {
-    var jstsPoint = geojsonReader.read(point);
+function recuperaEstado(req, res, jstsPoint, retorno) {
+
     var way = findIntesection(states, jstsPoint);
     if (way.index) {
         retorno.address.state = states[way.index].tags.name.pt ? states[way.index].tags.name.pt : states[way.index].tags.name;
     }
-    recuperaPais(req, res, point, retorno);
+    recuperaPais(req, res, jstsPoint, retorno);
 }
 
-function recuperaPais(req, res, point, retorno) {
-    var jstsPoint = geojsonReader.read(point);
+function recuperaPais(req, res, jstsPoint, retorno) {
     var way = findIntesection(countries, jstsPoint);
     if (way.index) {
         retorno.address.country = countries[way.index].tags.name.pt ? countries[way.index].tags.name.pt : countries[way.index].tags.name;
