@@ -100,7 +100,7 @@ if (config.enable_node_cluster && cluster.isMaster) {
             "tags.admin_level": {'$in': ['2', '4', '8', '10']},
             'loc': {$exists: true}
         };
-        relations.find(filter, {"tags": 1, "loc": 1})
+        relations.find(filter, {"tags": 1, "loc": 1}, {sort: {"_id": -1}})
             .exec(function (err, result) {
 				if(err){
 					return console.error(err);
