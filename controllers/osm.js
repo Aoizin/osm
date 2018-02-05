@@ -1,10 +1,12 @@
 var nodes = require('../models/nodes');
 var relations = require('../models/relations');
 var ways = require('../models/ways');
+var places = require('../models/places');
 var jsts = require('jsts');
 var geojsonReader = new jsts.io.GeoJSONReader();
 var rest = require('restler');
 var async = require('async');
+var q = require('q');
 
 exports.reverse = function (req, res) {
     var lat = Number(req.query.lat);
@@ -229,5 +231,137 @@ function gerarPoligonos(relationsArray) {
     });
 };
 
+exports.gerarPlaces = function (req, res) {
+    places.find({}, '_id', { skip: 0, limit: 1,  sort:{_id: -1 }},function (err, result) {
+        if(err){
+            console.log(err);
+            return res.status(500).send(err);
+        }
+        var lastId;
+        if(result[0]){
+            lastId = result[0]._id;
+        }
+        var i = 0;
+        async.doUntil(function(end) {
+            getWays(i, lastId).then(function (hasNext) {
+                if(hasNext){
+                    i++;
+                }
+                setTimeout(end, 100);
+            }).catch(function (e) {
+                end(e);
+            })
+        }, function(hasNext) {
+            return hasNext;
+        }, function(err) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Done!');
+            }
+        });
+        res.json({});
+    });
+
+};
+
+function getWays(i, lastId) {
+    var filter = {
+        "loc.type": "LineString",
+        $or: [ { 'tags.name': {$exists: true} }, { 'tags.description': {$exists: true} } ],
+    };
+    if(lastId){
+        filter._id = {'$gt': lastId}
+    }
+    var deferred = q.defer();
+    ways.find(filter, '_id type nodes loc tags', { skip: i*100, limit: 100,  sort:{_id: 1 }}, function (err, result) {
+        if (err) {
+            console.log(err);
+            deferred.reject(err);
+        } else {
+            var hasNext = result.length == 100;
+            var bulk = [];
+            result.forEach(function (r) {
+                var nearWay = r.toJSON();
+                var jstsPoint = geojsonReader.read(nearWay.loc);
+                var retorno = {_id: nearWay._id, osm_type: "way", loc: nearWay.loc, nodes: nearWay.nodes};
+                retorno.address = {
+                    road: nearWay.tags.name ? nearWay.tags.name : nearWay.tags.description,
+                    suburb: "",
+                    city: "",
+                    state: "",
+                    country: ""
+                };
+                retorno.extratags = {
+                    maxspeed : nearWay.tags.maxspeed,
+                    highway : nearWay.tags.highway,
+                    oneway : nearWay.tags.oneway
+                };
+                try{
+                    recuperaBairro({}, {json: function () {
+
+                        }}, jstsPoint, retorno);
+                } catch (er){
+                    console.log(retorno._id+ ' erro');
+                    recuperaCidade({}, {json: function () {
+
+                        }}, jstsPoint, retorno);
+                }
+
+                bulk.push(retorno);
+            });
+
+            places.collection.insert(bulk, function (error, nrows) {
+                if (error) {
+                    console.log(err);
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(hasNext);
+                }
+            });
+        }
+    });
+    return deferred.promise;
+}
+
+
+exports.reverse = function (req, res) {
+    var lat = Number(req.query.lat);
+    var lon = Number(req.query.lon);
+    if (!lat || !lon) {
+        res.status(409).send({message: 'Informar latitude e longitude'});
+        return;
+    }
+
+    var point = {
+        type: 'Point',
+        coordinates: [lon, lat]
+    };
+
+    var filter = {
+        "loc": {
+            $near: {
+                $geometry: point,
+                $maxDistance: 50
+            }
+        },
+        "address.road": {$ne: null}
+    };
+
+    places.find(filter, '_id osm_type address extratags', { skip: 0, limit: 1,  sort:{_id: -1 }}, function (err, result) {
+        if (err) {
+            console.log(err);
+            res.status(500).send(err);
+        } else {
+            if (result[0]) {
+                res.json(result[0]);
+            } else {
+                res.json({message: 'Não foi possível encontrar o endereço'});
+            }
+
+        }
+    });
+
+};
     
 

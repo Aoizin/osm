@@ -90,6 +90,10 @@ if (config.enable_node_cluster && cluster.isMaster) {
     router.route('/gerarPoligonos')
         .get(osm.gerarPoligonos);
 
+    router.route('/gerarPlaces')
+        .get(osm.gerarPlaces);
+
+
     // Register all our routes with /api
     app.use('/api', router);
 
