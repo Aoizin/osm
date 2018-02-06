@@ -6,6 +6,7 @@ var jsts = require('jsts');
 var geojsonReader = new jsts.io.GeoJSONReader();
 var rest = require('restler');
 var async = require('async');
+var polygons = require('../models/polygons');
 var q = require('q');
 
 exports.reverse = function (req, res) {
@@ -281,9 +282,8 @@ function getWays(i, lastId) {
         } else {
             var hasNext = result.length == 100;
             var bulk = [];
-            result.forEach(function (r) {
+            async.eachSeries(result, function (r, callback) {
                 var nearWay = r.toJSON();
-                var jstsPoint = geojsonReader.read(nearWay.loc);
                 var retorno = {_id: nearWay._id, osm_type: "way", loc: nearWay.loc, nodes: nearWay.nodes};
                 retorno.address = {
                     road: nearWay.tags.name ? nearWay.tags.name : nearWay.tags.description,
@@ -297,28 +297,67 @@ function getWays(i, lastId) {
                     highway : nearWay.tags.highway,
                     oneway : nearWay.tags.oneway
                 };
-                try{
-                    recuperaBairro({}, {json: function () {
 
-                        }}, jstsPoint, retorno);
-                } catch (er){
-                    console.log(retorno._id+ ' erro');
-                    recuperaCidade({}, {json: function () {
+                var filter = {
+                    "loc": {
+                        $geoIntersects: {
+                            $geometry: nearWay.loc
+                        }
+                    }
+                };
 
-                        }}, jstsPoint, retorno);
-                }
+                polygons.find(filter, {"tags": 1}, {sort: {"_id": -1}}, function (err, list) {
+                    if(err){
+                        return callback(err);
+                    }
+                    var suburbs = list.filter(function(r){
+                            return r.tags.admin_level == '10';
+                        }
+                    );
+                    if(suburbs[0]){
+                        retorno.address.suburb = suburbs[0].tags.name.pt ? suburbs[0].tags.name.pt : suburbs[0].tags.name;
+                    }
+                    var cities = list.filter(function(r){
+                            return r.tags.admin_level == '8';
+                        }
+                    );
+                    if(cities[0]){
+                        retorno.address.city = cities[0].tags.name.pt ? cities[0].tags.name.pt : cities[0].tags.name;
+                    }
+                    var states = list.filter(function(r){
+                            return r.tags.admin_level == '4';
+                        }
+                    );
+                    if(states[0]){
+                        retorno.address.state = states[0].tags.name.pt ? states[0].tags.name.pt : states[0].tags.name;
+                    }
+                    var countries = list.filter(function(r){
+                            return r.tags.admin_level == '2';
+                        }
+                    );
+                    if(countries[0]){
+                        retorno.address.country = countries[0].tags.name.pt ? countries[0].tags.name.pt : countries[0].tags.name;
+                    }
+                    bulk.push(retorno);
+                    callback();
+                });
 
-                bulk.push(retorno);
-            });
-
-            places.collection.insert(bulk, function (error, nrows) {
-                if (error) {
+            }, function (err) {
+                if (err) {
                     console.log(err);
-                    deferred.reject(err);
                 } else {
-                    deferred.resolve(hasNext);
+                    places.collection.insert(bulk, function (error, nrows) {
+                        if (error) {
+                            console.log(err);
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(hasNext);
+                        }
+                    });
                 }
+
             });
+
         }
     });
     return deferred.promise;
