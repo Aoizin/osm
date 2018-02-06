@@ -282,7 +282,7 @@ function getWays(i, lastId) {
         } else {
             var hasNext = result.length == 100;
             var bulk = [];
-            async.eachSeries(result, function (r, callback) {
+            async.each(result, function (r, callback) {
                 var nearWay = r.toJSON();
                 var retorno = {_id: nearWay._id, osm_type: "way", loc: nearWay.loc, nodes: nearWay.nodes};
                 retorno.address = {
@@ -348,9 +348,10 @@ function getWays(i, lastId) {
                 } else {
                     places.collection.insert(bulk, function (error, nrows) {
                         if (error) {
-                            console.log(err);
-                            deferred.reject(err);
+                            console.log(error);
+                            deferred.reject(error);
                         } else {
+                            console.log(nrows.insertedCount);
                             deferred.resolve(hasNext);
                         }
                     });
