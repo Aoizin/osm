@@ -8,11 +8,6 @@ var osm = require('./controllers/osm');
 // Include the cluster module
 var cluster = require('cluster');
 var q = require('q');
-var async = require('async');
-suburbs = null;
-cities = null;
-states = null;
-countries = null;
 
 // Code to run if we're in the master process
 if (config.enable_node_cluster && cluster.isMaster) {
@@ -99,64 +94,6 @@ if (config.enable_node_cluster && cluster.isMaster) {
     app.use('/api', router);
 
     deferred.promise.then(function () {
-        console.log("Carregando geometrias");
-        // var relations = require('./models/relations');
-        // var polygons = require('./models/polygons');
-        // var filter = {
-        //     "tags.admin_level": {'$in': ['2', '4', '8', '10']},
-        //     'loc': {$exists: true}
-        // };
-        // relations.find(filter, {"_id": 1, "type": 1, "tags": 1, "loc": 1}, {sort: {"_id": -1}})
-        //     .exec(function (err, result) {
-			// 	if(err){
-			// 		return console.error(err);
-			// 	}
-        //
-			// 	suburbs = result.filter(function(r){
-			// 		return r.tags.admin_level == '10';
-			// 	}
-			// 	);
-        //         cities = result.filter(function(r){
-			// 		return r.tags.admin_level == '8';
-			// 	}
-			// 	);
-			// 	states = result.filter(function(r){
-			// 		return r.tags.admin_level == '4';
-			// 	}
-			// 	);
-			// 	countries = result.filter(function(r){
-			// 		return r.tags.admin_level == '2';
-			// 	}
-			// 	);
-			// 	console.log("suburbs: "+ suburbs.length);
-			// 	console.log("cities: "+ cities.length);
-			// 	console.log("states: "+ states.length);
-			// 	console.log("countries: "+ countries.length);
-        //
-        //         async.eachSeries(result, function (relation, callback) {
-        //
-        //             polygons.collection.insert(relation.toJSON(), function (error, nrows) {
-        //                 if (error) {
-        //                     console.log(err);
-        //                 }
-        //                 callback();
-        //             });
-        //
-        //         }, function (err) {
-        //             if (err) {
-        //                 console.log(err);
-        //             } else {
-        //                 console.log('Done!');
-        //             }
-        //
-        //         });
-        //
-        //
-        //          // Start the server
-        //         console.log("Server started!");
-        //         app.listen(3001);
-        //
-        //     });
         // Start the server
         console.log("Server started!");
         app.listen(3001);
