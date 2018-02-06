@@ -284,7 +284,7 @@ function getWays(i, lastId) {
             var bulk = [];
             async.each(result, function (r, callback) {
                 var nearWay = r.toJSON();
-                if(nearWay.loc.coordinates[0][0] == nearWay.loc.coordinates[1][0] && nearWay.loc.coordinates[1][1] == nearWay.loc.coordinates[1][1]){
+                if(nearWay.loc.coordinates.length == 2 && nearWay.loc.coordinates[0][0] == nearWay.loc.coordinates[1][0] && nearWay.loc.coordinates[1][1] == nearWay.loc.coordinates[1][1]){
                     return callback();
                 }
                 var retorno = {_id: nearWay._id, osm_type: "way", loc: nearWay.loc, nodes: nearWay.nodes};
