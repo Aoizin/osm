@@ -351,7 +351,7 @@ function getWays(i, lastId) {
                             console.log(error);
                             deferred.reject(error);
                         } else {
-                            console.log(nrows.insertedCount);
+                            console.log(nrows.insertedCount * (i+1));
                             deferred.resolve(hasNext);
                         }
                     });
