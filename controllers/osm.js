@@ -253,7 +253,7 @@ exports.reverse = function (req, res) {
         "address.road": {$ne: null}
     };
 
-    places.find(filter, '_id osm_type address extratags', { skip: 0, limit: 1,  sort:{_id: -1 }}, function (err, result) {
+    places.find(filter, '_id osm_type address extratags', { skip: 0, limit: 1}, function (err, result) {
         if (err) {
             console.log(err);
             res.status(500).send(err);
