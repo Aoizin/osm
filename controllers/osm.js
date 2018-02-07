@@ -79,8 +79,9 @@ exports.gerarPlaces = function (req, res) {
             getWays(i, lastId).then(function (hasNext) {
                 if(hasNext){
                     i++;
+                    setTimeout(end, 100);
                 }
-                setTimeout(end, 100);
+                end('end')
             }).catch(function (e) {
                 end(e);
             })
@@ -116,9 +117,6 @@ function getWays(i, lastId) {
             var bulk = [];
             async.each(result, function (r, callback) {
                 var nearWay = r.toJSON();
-                if(nearWay.loc.coordinates.length == 2 && nearWay.loc.coordinates[0][0] == nearWay.loc.coordinates[1][0] && nearWay.loc.coordinates[0][1] == nearWay.loc.coordinates[1][1]){
-                    return callback();
-                }
                 var retorno = {_id: nearWay._id, osm_type: "way", loc: nearWay.loc, nodes: nearWay.nodes};
                 retorno.address = {
                     road: nearWay.tags.name ? nearWay.tags.name : nearWay.tags.description,
@@ -184,11 +182,9 @@ function getWays(i, lastId) {
                     places.collection.insert(bulk, function (error, nrows) {
                         if (error) {
                             console.log(error);
-                            deferred.reject(error);
-                        } else {
+                        } 
                             console.log(nrows.insertedCount * (i+1));
                             deferred.resolve(hasNext);
-                        }
                     });
                 }
 
