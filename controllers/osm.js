@@ -80,8 +80,9 @@ exports.gerarPlaces = function (req, res) {
                 if(hasNext){
                     i++;
                     setTimeout(end, 100);
+                } else {
+                    end('end')
                 }
-                end('end')
             }).catch(function (e) {
                 end(e);
             })
@@ -182,7 +183,7 @@ function getWays(i, lastId) {
                     places.collection.insert(bulk, function (error, nrows) {
                         if (error) {
                             console.log(error);
-                        } 
+                        }
                             console.log(nrows.insertedCount * (i+1));
                             deferred.resolve(hasNext);
                     });
